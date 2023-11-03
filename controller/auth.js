@@ -10,7 +10,13 @@ export async function logIn(req, res, next){
     const {username, password} = req.body
     const result = await userInfo.get(username, password)
     if(result){
-        res.status(200).json({message: `Tweet username(${username}) login success`})
+        const user = userInfo.getByUsername(username)
+        const user_jwt = userInfo.getJWT(username, password)
+        const user_add = {
+            ...user,
+            jwt: user_jwt
+        }
+        res.status(200).json(user_add)
     }
     else{
         res.status(404).json({message: `Tweet username(${username}) or password not correct`})

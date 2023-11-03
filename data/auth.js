@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt"
+import jwt  from "jsonwebtoken"
 
 let users = [
     {
@@ -37,9 +38,21 @@ export async function get(username, password){
     }
 }
 
-export async function getAll(){
-    return users
+export function getByUsername(username){
+    const user = users.find((user) => user.username === username)
+    return user
 }
 
-
+export function getJWT(username, password){
+    const token = jwt.sign(
+        {
+            id: username,
+            isAmin: false
+        },
+        password,
+        { expiresIn: 1200 } 
+    )
+    return token
+    
+}
 
