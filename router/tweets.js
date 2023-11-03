@@ -1,15 +1,24 @@
 import express from "express";
 import * as tweetRepository from '../controller/tweet.js'
+import { body } from "express-validator"
+import { validate } from "../middleware/validator.js";
 
 const router = express.Router()
 
+const validateTweet = [
+    body('text').trim().isLength({min: 3}).withMessage('최소 3자이상 입력!'),  validate
+]
+
+/*
+    post, put에 text에 빈문자열을 없에고. 3자이상 입력해야 저장되도록 API  적용
+*/
 router.get('/', tweetRepository.getTweets)
 
 router.get('/:id', tweetRepository.getTweet)
 
-router.post('/', tweetRepository.createTweet)
+router.post('/', validateTweet,tweetRepository.createTweet)
 
-router.put('/:id', tweetRepository.updateTweet)
+router.put('/:id', validateTweet, tweetRepository.updateTweet)
 
 router.delete('/:id', tweetRepository.deleteTweet)
 
