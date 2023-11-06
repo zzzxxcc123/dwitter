@@ -1,24 +1,59 @@
-import * as userInfo from '../data/auth.js' 
+import * as userRepository from '../data/auth.js' 
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
+import { token } from 'morgan'
 
-export async function signup(req, res, next){
-    const { id, username, password, name, email, url } = req.body;
-    const users = await userInfo.create(id, username, password, name, email, url);
-    res.status(201).json(users);
+
+// 설정파일로 적용할 예쩡 
+const jwtSecretKey = 'abcdef!@#$%^&*()'
+const jwtExpiresInDays = '2d'
+const bcryptSaltRounds = 12
+
+export async function signup(req, res){
+    const { username, password, name, email, url } = req.body
+    const found = await userRepository.findByUsername(username)
+    if(found){
+        return res.status(409).json({ message: `${username}이미 가입되었음`})
+    }
+
+    const hashed = await bcrypt.hash(password, bcryptSaltRounds)
+    const userId = await userRepository.createUser({
+        username, 
+        password: hashed,
+        name,
+        email,
+        url
+    })
+    const token = createJwtToken(userId)
+    res.status(201).json({token, username})
 }
 
-export async function logIn(req, res, next){
-    const {username, password} = req.body
-    const result = await userInfo.get(username, password)
-    if(result){
-        const user = userInfo.getByUsername(username)
-        const user_jwt = userInfo.getJWT(username, password)
-        const user_add = {
-            ...user,
-            jwt: user_jwt
-        }
-        res.status(200).json(user_add)
+export async function login(req, res){
+    //body에서 usernma 과 password 받아오기
+    const { username, password } = req.body
+    // username있는지 확인 하기(없으면 401)
+    const user = await userRepository.findByUsername(username)
+    // 있으면 비밀번호 비교하기 (틀리면 401)
+    if(!user){
+        return res.status(401).json({message: '아이디를 찾을 수 없음 '})
     }
-    else{
-        res.status(404).json({message: `Tweet username(${username}) or password not correct`})
+    const isValidpassword = await bcrypt.compareSync(password, user.password)
+    if(!isValidpassword){
+        return res.status(401).json({message: '비밀번호 틀임'})
     }
+    const token = createJwtToken(user.id)
+    res.status(200).json({token, username})
+    // 맞으면 토큰 생성(200)
+}
+
+function createJwtToken(id){
+    return jwt.sign({id}, jwtSecretKey, {expiresIn: jwtExpiresInDays})
+}
+
+export async function me(req, res, next){
+    const user = await userRepository.findById(req.userId)
+    if(!user){
+        return res.status(404).json({message: `사용자를 찾을 수 없음`})
+    }
+    return res.status(200).json({token: req.token, username: user.username})
 }
