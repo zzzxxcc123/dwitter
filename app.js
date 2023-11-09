@@ -3,11 +3,13 @@ import morgan from "morgan"
 import tweetsRouter from "./router/tweets.js"
 import authRouter from "./router/auth.js"
 import { config } from "./config.js"
+import cors from 'cors'
 
 const app = express()
 
 app.use(express.json())
 app.use(morgan("dev"))
+app.use(cors())
 
 // 라우터 객체 생성 
 app.use('/tweets', tweetsRouter)
