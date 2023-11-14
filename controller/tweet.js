@@ -31,17 +31,20 @@ export async function createTweet(req, res, next){
 
 //updateTweet
 export async function updateTweet(req, res, next){
-    const id = req.params.id
-    const text = req.body.text
-    const tweet = await tweetRepository.getById(id)
-    if(!tweet){
-        res.status(404).json({message: `Tweet id(${id}) not found`})
+    const id = req.params.id;
+    const text = req.body.text;
+    const tweet = await tweetRepository.getById(id);
+
+    if (!tweet){
+        console.log('트윗 없음');
+        res.status(404).json({message: `Tweet id(${id}) not found`});
     }
-    if(tweet.userId !== req.userId){
-        return res.sendStatus(403)
+    if (tweet.userId !== req.userId){
+        return res.sendStatus(403);
     }
-    const update = await tweetRepository.update(id, text)
-    res.status(200).json(update)
+    const updated = await tweetRepository.update(id, text);    
+    res.status(200).json(updated);
+
 }
 
 //deleteTweet
