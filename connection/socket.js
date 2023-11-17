@@ -1,44 +1,43 @@
-import { Server } from "socket.io"
-import jwt from "jsonwebtoken"
-import { config } from "../config.js"
+import { Server } from "socket.io";
+import jwt from 'jsonwebtoken';
+import { config } from "../config.js";
 
 class Socket{
     constructor(server){
         this.io = new Server(server, {
-            cors: {
+            cors:{
                 origin: '*'
             }
-        })
+        });
 
-        this.io.use((socket, next) => {
-            const token = socket.handshake.auth.token
+        this.io.use((socket, next)=>{
+            const token = socket.handshake.auth.token;
             if(!token){
-                return nect(new Error('인증 에러!'))
+                return next(new Error('인증 에러'))
             }
-            jwt.verify(token, config.jwt.secretKey, (error, decoded) => {
+            jwt.verify(token, config.jwt.secretKey, (error, decoded) =>{
                 if(error){
-                    return new Error('인증 에러')
+                    return next(new Error('인증 에러!'))
                 }
                 next()
-            })
-        })
-        
-        this.io.on('connection', (socket) => {
-            console.log('클라이언트 접속')
+            });
+        });
+        this.io.on('connetion', (socket)=>{
+            console.log('클라이언트 접속!');
         })
     }
 }
 
-let socket
-export function initSocket(server){
+let socket;
+export function initSocket(server) {
     if(!socket){
         socket = new Socket()
     }
 }
 
-export function getSocketIO(){
+export function getSocketIO() {
     if(!socket){
-        throw new Error('먼저 init를 실행해야 함')
+        throw new Error('먼저 init를 실행해야함')
     }
-    return socket.io
+    return socket.io;
 }
